@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 auto CheckProfileReplacement(UI ui, bool profile_exists, UI::StartMenuOption input) -> int {
     if (profile_exists && input == UI::OPT_START_NEW_PROFILE) {
@@ -156,8 +157,11 @@ auto HandleCardAdd(Store &store, UI &ui) -> int {
 
 auto main() -> int {
     UI ui = UI();
-    std::shared_ptr<SodiumCrypto> sodium_crypto = std::make_shared<SodiumCrypto>(SodiumCrypto());
-    Store store = Store(sodium_crypto);
+
+    auto sodium_crypto = std::make_shared<SodiumCrypto>(SodiumCrypto());
+    auto in_stream = std::make_unique<std::ifstream>(std::ifstream());
+    auto out_stream = std::make_unique<std::ofstream>(std::ofstream());
+    Store store = Store(sodium_crypto, std::move(in_stream), std::move(out_stream));
 
     if (sodium_crypto->InitCrypto() == -1) {
         std::cerr << "Failed to init crypto.\n";

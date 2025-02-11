@@ -28,7 +28,8 @@ class Store {
         SAVE_STORE_COMMIT_TEMP_ERR,
     };
 
-    explicit Store(std::shared_ptr<ICrypto> crypto);
+    explicit Store(std::shared_ptr<ICrypto> crypto, std::unique_ptr<std::ifstream> in_stream,
+                   std::unique_ptr<std::ofstream> out_stream);
     ~Store();
 
     auto InitNewStore(unsigned char *password) -> int;
@@ -43,17 +44,16 @@ class Store {
 
   private:
     std::shared_ptr<ICrypto> crypto_;
+    std::unique_ptr<std::ifstream> in_stream_;
+    std::unique_ptr<std::ofstream> out_stream_;
     std::vector<struct CreditCard *> cards_;
 
     std::unique_ptr<unsigned char[]> hashed_password_;
     std::unique_ptr<unsigned char[]> salt_;
     std::unique_ptr<unsigned char[]> encryption_key_;
 
-    const std::string store_file_name_ = "WalletCache.store";
-    const std::string tmp_store_file_name_ = "WalletCache.store.tmp";
-
-    std::ifstream in_stream_;
-    std::ofstream out_stream_;
+    const std::string STORE_FILE_NAME = "WalletCache.store";
+    const std::string TMP_STORE_FILE_NAME = "WalletCache.store.tmp";
 
     auto ReadHeader(unsigned char *hash, unsigned char *salt) -> int;
     auto ReadData(unsigned char *decrypted_data, uintmax_t data_size, uint64_t *decrypted_size_actual) -> int;
