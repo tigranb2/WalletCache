@@ -15,6 +15,7 @@ function(config_test test_name test_source)
     target_link_libraries(${test_name} PRIVATE
         WalletCacheLib  # Our core library
         GTest::gtest_main
+        GTest::gmock
     )
     
     target_include_directories(${test_name} PRIVATE
