@@ -3,6 +3,7 @@
 
 #include "creditcard.hpp"
 #include "icrypto.hpp"
+#include "ifileio.hpp"
 
 #include <fstream>
 #include <memory>
@@ -11,6 +12,8 @@
 
 class Store {
   public:
+    static const inline std::string STORE_FILE_NAME = "WalletCache.store";
+
     enum LoadStoreStatus {
         LOAD_STORE_VALID = 0,
         LOAD_STORE_OPEN_ERR,
@@ -28,7 +31,7 @@ class Store {
         SAVE_STORE_COMMIT_TEMP_ERR,
     };
 
-    explicit Store(std::shared_ptr<ICrypto> crypto);
+    explicit Store(std::shared_ptr<ICrypto> crypto, std::unique_ptr<IFileIO> fileio);
     ~Store();
 
     auto InitNewStore(unsigned char *password) -> int;
@@ -43,17 +46,12 @@ class Store {
 
   private:
     std::shared_ptr<ICrypto> crypto_;
+    std::unique_ptr<IFileIO> fileio_;
     std::vector<struct CreditCard *> cards_;
 
     std::unique_ptr<unsigned char[]> hashed_password_;
     std::unique_ptr<unsigned char[]> salt_;
     std::unique_ptr<unsigned char[]> encryption_key_;
-
-    const std::string store_file_name_ = "WalletCache.store";
-    const std::string tmp_store_file_name_ = "WalletCache.store.tmp";
-
-    std::ifstream in_stream_;
-    std::ofstream out_stream_;
 
     auto ReadHeader(unsigned char *hash, unsigned char *salt) -> int;
     auto ReadData(unsigned char *decrypted_data, uintmax_t data_size, uint64_t *decrypted_size_actual) -> int;
@@ -63,12 +61,6 @@ class Store {
     auto GetCardsSize() -> uintmax_t;
     auto CardsFormatted(unsigned char *buf) -> uintmax_t;
     void LoadCards(unsigned char *data);
-
-    auto GetStoreSize(bool is_tmp) -> uintmax_t;
-    auto OpenStoreIn(bool is_tmp) -> int;
-    auto OpenStoreOut(bool is_tmp) -> int;
-    auto GetStorePath(std::string &path, bool is_tmp) -> int;
-    auto CommitTemp() -> int;
 };
 
 #endif // STORE_HPP

@@ -1,11 +1,22 @@
 #include "creditcard.hpp"
+#include "fstreamfileio.hpp"
 #include "sodiumcrypto.hpp"
 #include "store.hpp"
 #include "ui.hpp"
+#include "utils.hpp"
 #include "verification.hpp"
 
 #include <cstring>
 #include <iostream>
+
+auto GetStorePath() -> std::string {
+    std::string homepath = GetHomePath();
+    if (homepath.empty()) {
+        return "";
+    }
+
+    return GetFilePath(homepath, Store::STORE_FILE_NAME);
+}
 
 auto CheckProfileReplacement(UI ui, bool profile_exists, UI::StartMenuOption input) -> int {
     if (profile_exists && input == UI::OPT_START_NEW_PROFILE) {
@@ -155,9 +166,16 @@ auto HandleCardAdd(Store &store, UI &ui) -> int {
 }
 
 auto main() -> int {
+    std::string store_path = GetStorePath();
+    if (store_path.empty()) {
+        std::cerr << "Failed to determine path for data file.\n";
+        return -1;
+    }
+
     UI ui = UI();
-    std::shared_ptr<SodiumCrypto> sodium_crypto = std::make_shared<SodiumCrypto>(SodiumCrypto());
-    Store store = Store(sodium_crypto);
+    auto sodium_crypto = std::make_shared<SodiumCrypto>();
+    auto fstream_fileio = std::make_unique<FStreamFileIO>(store_path);
+    Store store(sodium_crypto, std::move(fstream_fileio));
 
     if (sodium_crypto->InitCrypto() == -1) {
         std::cerr << "Failed to init crypto.\n";
